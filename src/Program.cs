@@ -13,6 +13,10 @@ var secret = builder.Configuration["SECRET_KEY_BASE"] ?? throw new InvalidOperat
 var connection = new NpgsqlConnectionStringBuilder(builder.Configuration["DATABASE_URL"] ?? "Host=localhost;Database=controlfinan_csharp;Username=app;Password=app")
 {
     MaxPoolSize = int.Parse(Env("DB_POOL", "10")),
+    // Like pgx (Go) and SQLx (Rust): keep prepared statements and skip the session reset (DISCARD ALL) on every
+    // return to the pool. With the defaults the database did up to 3x more work per request.
+    NoResetOnClose = true,
+    MaxAutoPrepare = 20,
 };
 var dataSource = NpgsqlDataSource.Create(connection.ConnectionString);
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
