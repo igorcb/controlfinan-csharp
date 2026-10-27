@@ -1,0 +1,9 @@
+@model List<string>
+@if (Model.Count > 0)
+{
+    <div class="rounded-md bg-red-50 px-4 py-3 text-sm text-red-800">
+      <ul class="list-inside list-disc">
+        @foreach (var message in Model) {<li>@message</li>}
+      </ul>
+    </div>
+}

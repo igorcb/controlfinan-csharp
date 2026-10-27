@@ -1,0 +1,6 @@
+.git
+benchmark
+**/bin/Debug
+**/obj
+src/wwwroot/css/app.css
+tests/bin

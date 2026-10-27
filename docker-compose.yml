@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: controlfinan_csharp
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    environment:
+      DATABASE_URL: Host=db;Database=controlfinan_csharp;Username=app;Password=app
+      TEST_DATABASE_URL: Host=db;Database=controlfinan_csharp_test;Username=app;Password=app
+      SECRET_KEY_BASE: development-only-secret
+      BCRYPT_COST: 12
+    ports:
+      - "8007:8000"
+    volumes:
+      - .:/app
+      - nuget:/home/app/.nuget
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+  nuget:

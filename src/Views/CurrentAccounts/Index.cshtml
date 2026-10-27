@@ -1,0 +1,84 @@
+@model IndexPage
+@{ ViewData["Title"] = "Conta Corrente"; }
+<div class="mb-4 flex items-end justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-semibold">Conta Corrente</h1>
+    <p class="mt-1 text-sm text-slate-600">@(Model.DateLabel.Length == 0 ? "Saldo total" : $"Saldo do dia {Model.DateLabel}")</p>
+    <p class="text-2xl font-bold @Model.BalanceClass">@Model.BalanceText</p>
+  </div>
+
+  <a class="btn-primary hidden sm:inline-flex" href="/current_accounts/new">Novo lançamento</a>
+</div>
+
+<form class="mb-4 flex items-end gap-2" action="/current_accounts" accept-charset="UTF-8" method="get">
+  <div class="min-w-0 flex-1 sm:flex-none">
+    <label class="label" for="date">Consultar saldo do dia</label>
+    <input class="input" type="date" value="@Model.DateValue" name="date" id="date">
+  </div>
+  <input type="submit" value="Consultar" class="btn-secondary">
+  @if (Model.DateLabel.Length > 0) {<a class="btn-secondary" href="/current_accounts">Limpar</a>}
+</form>
+
+@if (Model.Entries.Count == 0)
+{
+  <p class="card text-center text-sm text-slate-500">Nenhum lançamento encontrado.</p>
+}
+else
+{
+  <ul class="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:hidden">
+    @foreach (var e in Model.Entries)
+    {
+      <li>
+        <a class="flex items-center justify-between gap-3 px-4 py-3 active:bg-slate-50" href="/current_accounts/@e.Id">
+          <div class="min-w-0">
+            <p class="truncate font-medium">@e.NameCost</p>
+            <p class="truncate text-xs text-slate-500">
+              @e.DayMonth · @e.NameAccount@(e.HistoricText.Length > 0 ? " · " + e.HistoricText : "")
+            </p>
+          </div>
+          <span class="shrink-0 font-semibold @e.Color">
+            @e.SignedCurrency
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <div class="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm sm:block">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+      <thead class="bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="px-4 py-3">Data</th>
+          <th class="px-4 py-3">Conta</th>
+          <th class="px-4 py-3">Categoria</th>
+          <th class="px-4 py-3">Histórico</th>
+          <th class="px-4 py-3 text-right">Valor</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        @foreach (var e in Model.Entries)
+        {
+          <tr id="current_account_@e.Id" class="hover:bg-slate-50">
+            <td class="whitespace-nowrap px-4 py-3">@e.DateBr</td>
+            <td class="px-4 py-3">@e.NameAccount</td>
+            <td class="px-4 py-3">@e.NameCost</td>
+            <td class="px-4 py-3 text-slate-600">@e.HistoricText</td>
+            <td class="whitespace-nowrap px-4 py-3 text-right font-medium @e.Color">
+              @e.SignedCurrency
+            </td>
+            <td class="whitespace-nowrap px-4 py-3 text-right">
+              <a class="link" href="/current_accounts/@e.Id">Ver</a>
+              <a class="link ml-2" href="/current_accounts/@e.Id/edit">Editar</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<nav class="mt-4 flex justify-between gap-3">
+  @if (Model.PageNumber > 1) {<a class="btn-secondary" href="/current_accounts?@(Model.DateParam)page=@(Model.PageNumber - 1)">← Mais recentes</a>}
+  @if (Model.NextPage) {<a class="btn-secondary ml-auto" href="/current_accounts?@(Model.DateParam)page=@(Model.PageNumber + 1)">Mais antigos →</a>}
+</nav>

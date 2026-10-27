@@ -1,0 +1,28 @@
+@model Table
+<table class="min-w-full divide-y divide-slate-200 text-sm">
+  <thead class="text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+    <tr>
+      <th class="px-2 py-2 sm:px-4">@Model.Header</th>
+      <th class="px-2 py-2 sm:px-4 text-right">Valor</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-slate-100">
+    @foreach (var row in Model.Rows)
+    {
+      <tr>
+        <td class="px-2 py-2 sm:px-4">@row.Label</td>
+        <td class="px-2 py-2 sm:px-4 text-right @row.Class">@row.Currency</td>
+      </tr>
+    }
+    @if (Model.Rows.Count == 0)
+    {
+      <tr><td colspan="2" class="px-4 py-4 text-center text-slate-500">Nenhum lançamento no período.</td></tr>
+    }
+  </tbody>
+  <tfoot>
+    <tr class="border-t-2 border-slate-200 font-semibold">
+      <td class="px-2 py-2 sm:px-4">@Model.TotalLabel</td>
+      <td class="px-2 py-2 sm:px-4 text-right @Model.TotalClass">@Model.TotalCurrency</td>
+    </tr>
+  </tfoot>
+</table>

@@ -1,0 +1,5 @@
+@model EntryPage
+@{ ViewData["Title"] = "Editar lançamento"; }
+<h1 class="mb-6 text-2xl font-semibold">Editar lançamento</h1>
+
+@await Html.PartialAsync("_Form", Model)

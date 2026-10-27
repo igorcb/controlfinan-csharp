@@ -1,0 +1,26 @@
+# Production image: minified CSS, the app published in Release mode and the ASP.NET Core 9 runtime.
+FROM python:3.12-slim AS css
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && curl -fsSL --retry 6 --retry-all-errors --retry-delay 5 -o /usr/local/bin/tailwindcss \
+       https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.3/tailwindcss-linux-x64 \
+    && chmod +x /usr/local/bin/tailwindcss
+WORKDIR /src
+COPY assets ./assets
+COPY src/Views ./src/Views
+RUN tailwindcss -i assets/app.tailwind.css -o src/wwwroot/css/app.css --minify
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY src/ControlFinan.csproj src/
+RUN dotnet restore src/ControlFinan.csproj
+COPY src ./src
+COPY --from=css /src/src/wwwroot/css/app.css src/wwwroot/css/app.css
+RUN dotnet publish src/ControlFinan.csproj -c Release -o /out --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /out .
+USER app
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 Logging__LogLevel__Default=Warning
+EXPOSE 8000
+ENTRYPOINT ["dotnet", "ControlFinan.dll"]

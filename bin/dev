@@ -1,0 +1,5 @@
+#!/bin/sh
+# Development: build the CSS, then compile and run the app (restart the container after C# changes).
+set -e
+tailwindcss -i assets/app.tailwind.css -o src/wwwroot/css/app.css
+exec dotnet run --project src

@@ -1,0 +1,8 @@
+bin/Debug/
+bin/Release/
+obj/
+/src/bin/
+/src/obj/
+/tests/bin/
+/tests/obj/
+/src/wwwroot/css/app.css
