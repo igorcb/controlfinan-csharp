@@ -409,6 +409,41 @@ public class RequestTests(AppFactory factory) : AppTest(factory)
     }
 
     [Fact]
+    public async Task UpdateKeepsTheStoredValueOfFieldsMissingFromTheForm()
+    {
+        var user = await SignIn();
+        var entry = await CreateEntry(user, "2026-10-20", Entry.Debit, 7, 40m, "Almoço");
+
+        var response = await Post($"/current_accounts/{entry.Id}", ("_method", "patch"), ("current_account[price]", "55.5"),
+            ("current_account[type_launche]", "debito"), ("current_account[date_ocurrence]", "2026-10-21"), ("current_account[cash_account_id]", "5"));
+        Assert.Equal($"/current_accounts/{entry.Id}", response.Location);
+        Assert.Equal(1, await Count($"SELECT count(*) FROM current_accounts WHERE id = {entry.Id} AND historic = 'Almoço' AND cost_id = 7 AND price = 55.5 AND date_ocurrence = '2026-10-21'"));
+    }
+
+    [Fact]
+    public async Task UpdateWithOnlyThePriceKeepsEveryOtherField()
+    {
+        var user = await SignIn();
+        var entry = await CreateEntry(user, "2026-10-20", Entry.Credit, 6, 100m, "Corridas");
+
+        var response = await Post($"/current_accounts/{entry.Id}", ("_method", "patch"), ("current_account[price]", "120"));
+        Assert.Equal($"/current_accounts/{entry.Id}", response.Location);
+        Assert.Equal(1, await Count($"SELECT count(*) FROM current_accounts WHERE id = {entry.Id} AND price = 120 AND historic = 'Corridas' AND cost_id = 6 AND cash_account_id = 5 AND type_launche = {Entry.Credit} AND date_ocurrence = '2026-10-20'"));
+    }
+
+    [Fact]
+    public async Task UpdateWithAnEmptyRequiredFieldIsStillRejected()
+    {
+        var user = await SignIn();
+        var entry = await CreateEntry(user, "2026-10-20", Entry.Credit, 6, 100m, "Corridas");
+
+        var response = await Post($"/current_accounts/{entry.Id}", ("_method", "patch"), ("current_account[price]", ""));
+        Assert.Equal(422, response.Status);
+        AssertContains(response.Body, "Valor não pode ficar em branco");
+        Assert.Equal(1, await Count($"SELECT count(*) FROM current_accounts WHERE id = {entry.Id} AND price = 100"));
+    }
+
+    [Fact]
     public async Task LegacyDailySearchRedirectsToTheFilter()
     {
         var response = await Get("/search_account?date_calendar_now=2026-10-27");

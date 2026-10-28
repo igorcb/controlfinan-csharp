@@ -62,7 +62,7 @@ Imagem de produção: `Dockerfile.prod`, com o app publicado em modo Release no 
 
 ## Testes
 
-22 testes com **xUnit**. O app roda em memória (`WebApplicationFactory`), com um cliente HTTP com cookies e um Postgres de verdade. Eles cobrem:
+25 testes com **xUnit**. O app roda em memória (`WebApplicationFactory`), com um cliente HTTP com cookies e um Postgres de verdade. Eles cobrem:
 
 - Formatação de moeda e decimais.
 - Senha no formato do Rails, incluindo um hash gravado pelo próprio Rails.
