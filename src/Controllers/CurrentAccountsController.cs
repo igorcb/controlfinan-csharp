@@ -123,23 +123,35 @@ public partial class CurrentAccountsController(Web.Web web, Repository repositor
     /// <summary>The signed in user's entry; other users' entries are "not found".</summary>
     private async Task<Entry?> Find(string id) => long.TryParse(id, out var value) ? await Repository.FindEntry(CurrentUser.Id, value) : null;
 
-    /// <summary>Copies the form fields into the entry and returns the validation messages.</summary>
+    /// <summary>
+    /// Copies the form fields present in the request into the entry and returns the validation messages.
+    /// Like Rails' strong parameters + update, keys missing from the form keep the stored value;
+    /// a key that is present (even empty) is assigned.
+    /// </summary>
     private List<string> Assign(Entry entry)
     {
+        bool Has(string name) => Request.HasFormContentType && Request.Form.ContainsKey($"current_account[{name}]");
         int? Integer(string name)
         {
             var value = Field($"current_account[{name}]").Trim();
             return IntegerRegex().IsMatch(value) && int.TryParse(value, out var n) ? n : null;
         }
-        entry.CashAccountId = Integer("cash_account_id");
-        entry.CostId = Integer("cost_id");
-        entry.TypeLaunche = Field("current_account[type_launche]") switch { "debito" => Entry.Debit, "credito" => Entry.Credit, _ => null };
-        entry.DateOcurrence = ParseDate(Field("current_account[date_ocurrence]"));
-        entry.PriceText = Field("current_account[price]").Trim();
-        entry.Price = decimal.TryParse(entry.PriceText, NumberStyles.Float, CultureInfo.InvariantCulture, out var price)
-            ? Math.Round(price, 2, MidpointRounding.AwayFromZero) : null;
-        var historic = Field("current_account[historic]");
-        entry.Historic = historic.Length == 0 ? null : historic;
+        if (Has("cash_account_id")) entry.CashAccountId = Integer("cash_account_id");
+        if (Has("cost_id")) entry.CostId = Integer("cost_id");
+        if (Has("type_launche"))
+            entry.TypeLaunche = Field("current_account[type_launche]") switch { "debito" => Entry.Debit, "credito" => Entry.Credit, _ => null };
+        if (Has("date_ocurrence")) entry.DateOcurrence = ParseDate(Field("current_account[date_ocurrence]"));
+        if (Has("price"))
+        {
+            entry.PriceText = Field("current_account[price]").Trim();
+            entry.Price = decimal.TryParse(entry.PriceText, NumberStyles.Float, CultureInfo.InvariantCulture, out var price)
+                ? Math.Round(price, 2, MidpointRounding.AwayFromZero) : null;
+        }
+        if (Has("historic"))
+        {
+            var historic = Field("current_account[historic]");
+            entry.Historic = historic.Length == 0 ? null : historic;
+        }
         return entry.Validate();
     }
 
